@@ -1,0 +1,112 @@
+---
+title: "Soccer Analytics Fall 2025 Project"
+author: "Sophia Rao"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r}
+library(tidyverse)
+library(skimr)     # for overview summaries
+library(naniar)    # for missing value visualization
+library(GGally)    # for pairwise plots
+```
+
+```{r}
+wc22 <- read.csv("wc22data.csv") # read in data
+```
+
+```{r}
+# basic structure and preview
+str(wc22)
+glimpse(wc22)
+head(wc22)
+tail(wc22)
+
+dim(wc22) # dimensions (should be 32 rows and 11 columns)
+```
+
+```{r}
+# summary statistics
+summary(wc22)
+skim(wc22)  # richer overview: types, missing, distributions
+```
+
+```{r}
+# checking for missing values
+
+colSums(is.na(wc22)) # count missing per column
+
+vis_miss(wc22) # visualize missingness
+```
+
+```{r}
+#univariate analysis for numerical variables
+wc22 %>%
+  select(where(is.numeric)) %>%
+  gather(variable, value) %>%
+  ggplot(aes(value)) +
+  geom_histogram(bins = 30) +
+  facet_wrap(~ variable, scales = "free")
+```
+
+```{r}
+#univariate analysis for categorical variables
+wc22 %>%
+  select(where(is.character), where(is.factor)) %>%
+  gather(variable, value) %>%
+  ggplot(aes(value)) +
+  geom_bar() +
+  facet_wrap(~ variable, scales = "free") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+# correlation matrix of numerical variables
+wc22 %>% 
+  select(where(is.numeric)) %>%
+  GGally::ggcorr(label = TRUE)
+```
+
+```{r}
+GGally::ggcorr(
+  wc22 %>% select(where(is.numeric)),
+  label = TRUE
+) +
+  theme(
+    plot.margin = margin(20, 20, 20, 20),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10)
+  )
+```
+
+```{r}
+GGally::ggcorr(
+  wc22 %>% select(where(is.numeric)),
+  label = TRUE
+) +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8))
+```
+
+```{r}
+library(stringr)
+
+df <- wc22 %>% select(where(is.numeric))
+names(df) <- str_wrap(names(df), width = 10)
+
+GGally::ggcorr(df, label = TRUE)
+```
+
+```{r}
+library(corrplot)
+
+num_df <- df |> dplyr::select(where(is.numeric))
+
+corr <- cor(num_df, use = "complete.obs")
+
+corrplot(corr, method = "color", type = "upper", addCoef.col = "black")
+```
+
